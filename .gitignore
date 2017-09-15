@@ -1,3 +1,5 @@
 object.py
 *.swp
 .git/
+*.db
+
