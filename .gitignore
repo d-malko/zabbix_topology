@@ -3,3 +3,4 @@ object.py
 .git/
 *.db
 *~
+.idea/

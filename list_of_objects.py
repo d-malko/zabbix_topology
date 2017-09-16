@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import urllib, json, pickle, os
+import urllib, os, io
+import simplejson as json
 # import six.moves.cPickle as pickle
 
 zabbix_switches = []
@@ -83,17 +84,18 @@ class Port():
         self.upswitch_port = upswitch_port
 
 
-def save_to_file(lst, file_pickle):
+def save_to_file(data, file_json):
     # print(obj.__getinitargs__())
-    with open(file_pickle, 'wb') as output:
-        pickle.dump(lst, output)
-        output.close()
+    with io.open(file_json, 'w', encoding='utf-8') as outfile:
+        outfile.write(json.dumps(data, ensure_ascii=False))
+        outfile.close()
     # pickle.PicklingError TODO need to add try catch and this error
 
-def load_from_file(list_obj, file_pickle):
-    with open(file_pickle, 'rb') as f:
-        list_obj = pickle.load(f)
-        f.close()
+def load_from_file(data, file_json):
+    with open(file_json, 'r') as infile:
+        list_obj = json.loads(infile)
+        print(list_obj)
+        infile.close()
         # pickle.UnpicklingError TODO need to add try catch and this error
     return list_obj
 
@@ -155,9 +157,9 @@ if os.path.isfile(db_file):
     load_from_file(zabbix_switches, db_file)
 else:
     zabbix_switches = cubic_switches
-    save_to_file(zabbix_switches, db_file) # TODO add hash compare of file
+    save_to_file(cubic_switches, db_file) # TODO add hash compare of file
 # print(cubic_switches.__getinitargs__)
-for x in cubic_switches:
+for x in zabbix_switches:
     # print x
     if x.mac == '7072CF94FD97':
         print x.__name__
