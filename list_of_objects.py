@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import urllib, os, io
+import urllib, os, io, pprint
+from decimal import Decimal
 import simplejson as json
-# import six.moves.cPickle as pickle
+import six.moves.cPickle as pickle
 
 zabbix_switches = []
 cubic_switches = []
@@ -10,11 +11,14 @@ db_file = 'zabbix_topology.db'
 url = "http://work.volia.net/bm3/cache/eth/switchInformation/volia.ternopil"
 
 
-response = urllib .urlopen(url) #save text from url TODO need to add try catch
+response = urllib.urlopen(url) #save text from url TODO need to add try catch
 data_from_url = json.loads(response.read()) # convert json to dictionary
 
+class List:
+    pass
 
-class Switch():
+
+class Switch:
     """Object switch
 
     """
@@ -39,6 +43,9 @@ class Switch():
         # self.upswitch.mac = upswitch.mac
 
         #no return
+
+    def __str__(self):
+        return "member of Switch"
 
     def __getattr__(self, name):
         return name
@@ -72,6 +79,9 @@ class Switch():
     def change_snmp(self):
         pass
 
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
 
 class Port():
     """Object port
@@ -84,27 +94,38 @@ class Port():
         self.upswitch_port = upswitch_port
 
 
-def save_to_file(data, file_json):
-    # print(obj.__getinitargs__())
-    with io.open(file_json, 'w', encoding='utf-8') as outfile:
-        outfile.write(json.dumps(data, ensure_ascii=False))
-        outfile.close()
-    # pickle.PicklingError TODO need to add try catch and this error
 
-def load_from_file(data, file_json):
-    with open(file_json, 'r') as infile:
-        list_obj = json.loads(infile)
-        print(list_obj)
+def save_to_file(data, file_to_save):
+    with open(file_to_save, 'w') as outfile:
+        for obj in data:
+            outfile.write(json.dumps(obj, default=lambda o: o.__dict__))
+            # outfile.write(pickle.dumps(obj.toJSON()))
+        outfile.close()
+
+        # pickle.PicklingError TODO need to add try catch and this error
+        # with io.open(file_json, 'w', encoding='utf-8') as outfile:
+
+def load_from_file(data, file_to_read):
+    with open(file_to_read, 'r') as infile:
+        # print(infile.read())
+        list_obj = json.loads(infile.read())
+        # print(list_obj)
         infile.close()
         # pickle.UnpicklingError TODO need to add try catch and this error
     return list_obj
 
 
+def dump_keys(d, lvl=0):
+    for k, v in d.iteritems():
+        print '%s%s  %s' % (lvl * ' ', k, v.__dict__)
+        if type(v) == dict:
+            dump_keys(v, lvl+1)
 
-def create_list(switch_list):
+
+def create_list(switch_dict):
     for mac in data_from_url:
         sw = Switch(mac)
-        switch_list.append(sw)
+        switch_dict.append(sw)
         if isinstance(data_from_url[mac], dict): # if dictionary
                 for switch_key, switch_property  in data_from_url[mac].items(): # loop properties
                     if not isinstance(data_from_url[mac][switch_key], dict):
@@ -149,7 +170,7 @@ def create_list(switch_list):
         else:
             print( "not switch")
 
-    return(switch_list)
+    return(switch_dict)
 
 
 create_list(cubic_switches)
@@ -157,19 +178,17 @@ if os.path.isfile(db_file):
     load_from_file(zabbix_switches, db_file)
 else:
     zabbix_switches = cubic_switches
-    save_to_file(cubic_switches, db_file) # TODO add hash compare of file
+    print(type(zabbix_switches))
+    save_to_file(zabbix_switches, db_file) # TODO add hash compare of file
 # print(cubic_switches.__getinitargs__)
-for x in zabbix_switches:
-    # print x
+
+# dump_keys(zabbix_switches)
+for x in cubic_switches:
     if x.mac == '7072CF94FD97':
         print x.__name__
         print x.__class__
         print x.__dict__
+        print(x.mac)
         if x.ports:
             for y in x.ports:
-                print y.__dict__
-
-
-
-
-
+                print(y.__dict__)

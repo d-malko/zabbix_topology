@@ -4,3 +4,4 @@ object.py
 *.db
 *~
 .idea/
+*.back
